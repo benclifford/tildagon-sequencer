@@ -107,11 +107,10 @@ class SequencerApp(App):
     #     CANCEL button will switch to edit mode (so to exit, CANCEL twice).
     #     Other buttons I would like to be available later for user events,
     #     so ignore them here.
-    # ... but right now any button will do CANCEL behaviour
 
-    if self._mode == PLAY_MODE:
+    if self._mode == PLAY_MODE and BUTTON_TYPES["CANCEL"] in event.button:
       self._mode = EDIT_MODE
-    elif self._mode == EDIT_MODE: 
+    elif self._mode == EDIT_MODE and BUTTON_TYPES["CANCEL"] in event.button: 
       eventbus.remove(ButtonDownEvent, self._handle_buttondown, self)
       eventbus.emit(PatternEnable())
       self._foregrounded = False
