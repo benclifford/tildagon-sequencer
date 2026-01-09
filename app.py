@@ -103,10 +103,11 @@ class SequencerApp(App):
 
   def _handle_buttondown(self, event):
     # Button behaviours:
-    #   In play mode:
+    #   In PLAY mode:
     #     CANCEL button will switch to edit mode (so to exit, CANCEL twice).
     #     Other buttons I would like to be available later for user events,
     #     so ignore them here.
+    #   In EDIT mode, CANCEL exits. UP and DOWN move through the program.
 
     if self._mode == PLAY_MODE and BUTTON_TYPES["CANCEL"] in event.button:
       self._mode = EDIT_MODE
