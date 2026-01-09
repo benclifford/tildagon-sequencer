@@ -5,9 +5,11 @@ from tildagonos import tildagonos
 from events.input import BUTTON_TYPES, ButtonDownEvent
 from system.patterndisplay.events import PatternDisable, PatternEnable
 import asyncio
+import math
 import random
 import time
 
+PLAY_MODE = 0
 
 class SequencerApp(App):
   def __init__(self):
@@ -19,6 +21,8 @@ class SequencerApp(App):
     self.sequence_pos = -1  # -1 means next step should be first
     self._foregrounded = False
     self._last_step_time = 0
+
+    self._mode = PLAY_MODE
 
   def update(self, delta):
     if not self._foregrounded:
@@ -46,6 +50,17 @@ class SequencerApp(App):
   def draw(self, ctx):
 
     clear_background(ctx)
+
+    mode_colour = (0, 255, 0)
+
+    # max radius is 120, but I like the visual effect of being slightly
+    # inset.
+    ctx.arc(0, 0, 115, 0, 2 * math.pi, True)
+    ctx.rgb(*mode_colour).fill()
+
+    ctx.arc(0, 0, 105, 0, 2 * math.pi, True)
+    ctx.rgb(0, 0, 0).fill()
+
     ctx.text_align = ctx.CENTER
     ctx.text_baseline = ctx.MIDDLE
 
