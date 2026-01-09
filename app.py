@@ -49,10 +49,19 @@ class SequencerApp(App):
     ctx.text_align = ctx.CENTER
     ctx.text_baseline = ctx.MIDDLE
 
+    LIVE_SIZE = 20
+    OTHER_SIZE = 15
+
     if self.sequence_pos >= 0:
       assert self.sequence_pos >= 0
       assert self.sequence_pos < len(self.sequence)
-      ctx.move_to(0, 0).gray(1).text(f"{self.sequence_pos}: {self.sequence[self.sequence_pos]}")
+      ctx.font_size = LIVE_SIZE
+      ctx.move_to(0, 0).rgb(255,255,0).text(f"{self.sequence_pos}: {self.sequence[self.sequence_pos]}")
+      ctx.font_size = OTHER_SIZE
+      for n in range(1,8):
+        y = LIVE_SIZE/2 + n * (OTHER_SIZE) - (OTHER_SIZE/2)
+        ctx.move_to(0, -y).gray(1).text(f"BEFORE {n}")
+        ctx.move_to(0, y).gray(1).text(f"AFTER {n}")
     else:
       ctx.move_to(0, 0).gray(1).text(f"NO STEP YET")
 
