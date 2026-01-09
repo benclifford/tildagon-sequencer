@@ -10,6 +10,7 @@ import random
 import time
 
 PLAY_MODE = 0
+EDIT_MODE = 1
 
 class SequencerApp(App):
   def __init__(self):
@@ -32,6 +33,11 @@ class SequencerApp(App):
         eventbus.emit(PatternDisable())
         self._foregrounded = True
 
+    if self._mode == PLAY_MODE:
+      self.update_PLAY(delta)
+
+  def update_PLAY(self, delta):
+
     now = time.ticks_ms()
     delta_ticks = time.ticks_diff(now, self._last_step_time)
 
@@ -51,7 +57,12 @@ class SequencerApp(App):
 
     clear_background(ctx)
 
-    mode_colour = (0, 255, 0)
+    if self._mode == PLAY_MODE:
+        mode_colour = (0, 255, 0)
+    elif self._mode == EDIT_MODE:
+        mode_colour = (0, 0, 255)
+    else:  # indicate bad mode
+        mode_colour = (255, 0, 0)
 
     # max radius is 120, but I like the visual effect of being slightly
     # inset.
@@ -91,13 +102,21 @@ class SequencerApp(App):
       ctx.move_to(0, 0).gray(1).text(f"NO EXECUTION YET")
 
   def _handle_buttondown(self, event):
-    # this will happen on any of the 6 button presses without
-    # distinguishing between them - that means you can press any
-    # button to minimise.
+    # Button behaviours:
+    #   In play mode:
+    #     CANCEL button will switch to edit mode (so to exit, CANCEL twice).
+    #     Other buttons I would like to be available later for user events,
+    #     so ignore them here.
+    # ... but right now any button will do CANCEL behaviour
 
-    eventbus.remove(ButtonDownEvent, self._handle_buttondown, self)
-    eventbus.emit(PatternEnable())
-    self._foregrounded = False
-    self.minimise()
+    if self._mode == PLAY_MODE:
+      self._mode = EDIT_MODE
+    elif self._mode == EDIT_MODE: 
+      eventbus.remove(ButtonDownEvent, self._handle_buttondown, self)
+      eventbus.emit(PatternEnable())
+      self._foregrounded = False
+      self.minimise()
+    else:
+      print("button event in unknown mode - ignoring")
 
 __app_export__ = SequencerApp
