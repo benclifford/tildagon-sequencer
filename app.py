@@ -57,13 +57,23 @@ class SequencerApp(App):
       assert self.sequence_pos < len(self.sequence)
       ctx.font_size = LIVE_SIZE
       ctx.move_to(0, 0).rgb(255,255,0).text(f"{self.sequence_pos}: {self.sequence[self.sequence_pos]}")
+
       ctx.font_size = OTHER_SIZE
       for n in range(1,8):
         y = LIVE_SIZE/2 + n * (OTHER_SIZE) - (OTHER_SIZE/2)
-        ctx.move_to(0, -y).gray(1).text(f"BEFORE {n}")
-        ctx.move_to(0, y).gray(1).text(f"AFTER {n}")
+
+        render_step = self.sequence_pos - n
+        if render_step >= 0:
+          assert render_step < len(self.sequence)
+          ctx.move_to(0, -y).gray(1).text(f"{render_step}: {self.sequence[render_step]}")
+
+        render_step = self.sequence_pos + n
+        if render_step < len(self.sequence):
+          assert render_step >= 0
+          ctx.move_to(0, y).gray(1).text(f"{render_step}: {self.sequence[render_step]}")
     else:
-      ctx.move_to(0, 0).gray(1).text(f"NO STEP YET")
+      ct.font_size = LIVE_SIZE
+      ctx.move_to(0, 0).gray(1).text(f"NO EXECUTION YET")
 
   def _handle_buttondown(self, event):
     # this will happen on any of the 6 button presses without
