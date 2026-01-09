@@ -115,7 +115,7 @@ class SequencerApp(App):
           assert render_step >= 0
           ctx.move_to(0, y).gray(1).text(f"{render_step}: {self.sequence[render_step]}")
     else:
-      ct.font_size = LIVE_SIZE
+      ctx.font_size = LIVE_SIZE
       ctx.move_to(0, 0).gray(1).text(f"NO EXECUTION YET")
 
   def _handle_buttondown(self, event):
@@ -146,7 +146,7 @@ class SequencerApp(App):
       pass # NOTIMPL: edit menu ... time to learn about how to use menu UI component.
       self._mode = MENU_MODE
       print("Switching to MENU mode")
-      self.ui_delegate = Menu(self, ["A", "b", "C"], select_handler=self.select_handler, back_handler=self.back_handler)
+      self.ui_delegate = Menu(self, ["Insert step", "Edit step", "Delete step", "Run", "Run in background", "Choose difficulty"], select_handler=self.select_handler, back_handler=self.back_handler)
     elif self._mode == MENU_MODE:
       pass # menu will handle its own button events, we should stay out of the way
     else:
