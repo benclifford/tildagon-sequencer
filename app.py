@@ -50,7 +50,7 @@ class SequencerApp(App):
     ctx.text_baseline = ctx.MIDDLE
 
     LIVE_SIZE = 20
-    OTHER_SIZE = 15
+    OTHER_SIZE = 20
 
     if self.sequence_pos >= 0:
       assert self.sequence_pos >= 0
