@@ -115,6 +115,15 @@ class SequencerApp(App):
       eventbus.emit(PatternEnable())
       self._foregrounded = False
       self.minimise()
+    elif self._mode == EDIT_MODE and BUTTON_TYPES["UP"] in event.button: 
+      if self.sequence_pos > 0:
+        self.sequence_pos = (self.sequence_pos - 1)
+      # else ignore, because we're at the start of the list
+    elif self._mode == EDIT_MODE and BUTTON_TYPES["DOWN"] in event.button: 
+      if self.sequence_pos < len(self.sequence)-1:
+        self.sequence_pos = (self.sequence_pos + 1)
+      # else ignore because we're at the end of the list
+
     else:
       print("button event in unknown mode - ignoring")
 
