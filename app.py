@@ -16,7 +16,7 @@ class SequencerApp(App):
     # meaning "set all LEDs to this then wait 333ms".
     self.sequence = [(0,0,0), (255, 0, 255), (0, 255, 0), (0,0,0), (0, 255, 0), (0,0,0)]
 
-    self.sequence_pos = 99999 # will break if someone has this many steps
+    self.sequence_pos = -1  # -1 means next step should be first
     self._foregrounded = False
     self._last_step_time = 0
 
@@ -48,7 +48,13 @@ class SequencerApp(App):
     clear_background(ctx)
     ctx.text_align = ctx.CENTER
     ctx.text_baseline = ctx.MIDDLE
-    ctx.move_to(0, 0).gray(1).text(f"Step {self.sequence_pos}")
+
+    if self.sequence_pos >= 0:
+      assert self.sequence_pos >= 0
+      assert self.sequence_pos < len(self.sequence)
+      ctx.move_to(0, 0).gray(1).text(f"{self.sequence_pos}: {self.sequence[self.sequence_pos]}")
+    else:
+      ctx.move_to(0, 0).gray(1).text(f"NO STEP YET")
 
   def _handle_buttondown(self, event):
     # this will happen on any of the 6 button presses without
