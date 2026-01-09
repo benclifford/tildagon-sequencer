@@ -1,5 +1,5 @@
 from app import App
-from app_components import clear_background
+from app_components import clear_background, Menu
 from system.eventbus import eventbus
 from tildagonos import tildagonos
 from events.input import BUTTON_TYPES, ButtonDownEvent
@@ -11,6 +11,7 @@ import time
 
 PLAY_MODE = 0
 EDIT_MODE = 1
+MENU_MODE = 2
 
 class SequencerApp(App):
   def __init__(self):
@@ -25,7 +26,15 @@ class SequencerApp(App):
 
     self._mode = PLAY_MODE
 
+    self.ui_delegate = None
+
+  def select_handler(*args, **kwargs):
+    print("SELECT from Sequencer App menu")
+  def back_handler(*args, **kwargs):
+    print("BACK from Sequencer App menu")
+
   def update(self, delta):
+    # print(f"Update, mode is {self._mode}")
     if not self._foregrounded:
         # we maybe just regained focus, so (re-)register UI events.
         # I'm not clear on the favoured way to do that?
@@ -35,6 +44,9 @@ class SequencerApp(App):
 
     if self._mode == PLAY_MODE:
       self.update_PLAY(delta)
+    elif self._mode == MENU_MODE:
+      # print("main menu update")
+      return self.ui_delegate.update(delta)
 
   def update_PLAY(self, delta):
 
@@ -56,6 +68,11 @@ class SequencerApp(App):
   def draw(self, ctx):
 
     clear_background(ctx)
+
+    # delegate drawing completely to the menu if it is active
+    if self._mode == MENU_MODE:
+      # print("main menu draw")
+      return self.ui_delegate.draw(ctx)
 
     if self._mode == PLAY_MODE:
         mode_colour = (0, 255, 0)
@@ -108,6 +125,7 @@ class SequencerApp(App):
     #     Other buttons I would like to be available later for user events,
     #     so ignore them here.
     #   In EDIT mode, CANCEL exits. UP and DOWN move through the program.
+    #     CONFIRM triggers activity menu.
 
     if self._mode == PLAY_MODE and BUTTON_TYPES["CANCEL"] in event.button:
       self._mode = EDIT_MODE
@@ -124,8 +142,14 @@ class SequencerApp(App):
       if self.sequence_pos < len(self.sequence)-1:
         self.sequence_pos = (self.sequence_pos + 1)
       # else ignore because we're at the end of the list
-
+    elif self._mode == EDIT_MODE and BUTTON_TYPES["CONFIRM"] in event.button: 
+      pass # NOTIMPL: edit menu ... time to learn about how to use menu UI component.
+      self._mode = MENU_MODE
+      print("Switching to MENU mode")
+      self.ui_delegate = Menu(self, ["A", "b", "C"], select_handler=self.select_handler, back_handler=self.back_handler)
+    elif self._mode == MENU_MODE:
+      pass # menu will handle its own button events, we should stay out of the way
     else:
-      print("button event in unknown mode - ignoring")
+      print("Unknown button event - ignoring - mode {self._mode}, event {event}")
 
 __app_export__ = SequencerApp
