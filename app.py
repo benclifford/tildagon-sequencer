@@ -176,7 +176,7 @@ class SequencerApp(App):
     elif self._mode == MENU_MODE:
       pass # menu will handle its own button events, we should stay out of the way
     else:
-      print("Unknown button event - ignoring - mode {self._mode}, event {event}")
+      print(f"Unknown button event - ignoring - mode {self._mode}, event {event}")
 
   def _handle_menu_back(self):
     # back should back the menu go away and then go to EDIT mode (because
@@ -232,6 +232,91 @@ __app_export__ = SequencerApp
 class InsertStepUI:
   def __init__(self, app):
     self.app = app
+    self.ui_delegate = Menu(self.app, ["All LEDs", "Pause"], select_handler=self._handle_menu_select, back_handler=self._handle_menu_back)
+
+  def update(self, delta):
+    self.ui_delegate.update(delta)
+
+  def draw(self, ctx):
+    self.ui_delegate.draw(ctx)
+
+  def _handle_menu_select(self, item, idx):
+    # I think there might be problems here with this
+    # being called inside an event handler?
+    # but it seems to be working right now. expect
+    # breakage...
+
+    print(f"Insert step type: {item}")
+    # clean up our downstream delegate
+    self.ui_delegate._cleanup()
+
+    if item == "All LEDs":
+      self.ui_delegate = InsertAllLEDStepUI(self.app)
+    elif item == "Pause":
+      self.ui_delegate = InsertPauseStepUI(self.app)
+    else:
+      assert False, "No UI to create this step type"
+
+
+  def _handle_menu_back(self):
+    # clean up our downstream delegate
+    self.ui_delegate._cleanup()
+
+    # and remove ourselves from the app
+    self.app.ui_delegate = None
+    self.app._mode = EDIT_MODE
+
+
+class InsertPauseStepUI:
+  def __init__(self, app):
+    self.app = app
+    self.ui_delegate = Menu(self.app, ["500ms", "1 second", "5 seconds", "30 seconds"], back_handler=self._handle_menu_back, select_handler=self._handle_menu_select)
+
+  def _handle_menu_back(self):
+    # this goes back to edit mode when a more consistent flow would be to
+    # go back to the previous screen, which is the step type picker.
+
+    # clean up our downstream delegate
+    self.ui_delegate._cleanup()
+
+    # and remove ourselves from the app
+    self.app.ui_delegate = None
+    self.app._mode = EDIT_MODE
+
+  def update(self, delta):
+    self.ui_delegate.update(delta)
+ 
+  def draw(self, ctx):
+    self.ui_delegate.draw(ctx) 
+
+  def _handle_menu_select(self, item, idx):
+    self.ui_delegate._cleanup()
+
+    if idx == 0:
+      ms = 500
+    elif idx == 1:
+      ms = 1000
+    elif idx == 2:
+      ms = 5000
+    elif idx == 3:
+      ms = 30000
+    else:
+      assert False, "invalid duration menu option"
+
+    self.app.sequence.insert(self.app.sequence_pos, PauseStep(ms))
+    self.app.sequence_pos += 1
+
+    assert self.app.sequence_pos >= 0
+    assert self.app.sequence_pos < len(self.app.sequence)
+
+    # and remove ourselves from the app
+    self.app.ui_delegate = None
+    self.app._mode = EDIT_MODE
+
+
+class InsertAllLEDStepUI:
+  def __init__(self, app):
+    self.app = app
     self.chosen_colour = 0
     self.rgb = (0,0,0)
     eventbus.on(ButtonDownEvent, self._handle_buttondown, self.app)
@@ -282,7 +367,7 @@ class InsertStepUI:
       self.app._mode = EDIT_MODE
       self.app.ui_delegate = None
     else:
-      print("unhandled button event in InsertStepUI - ignoring")
+      print("unhandled button event in InsertAllLEDStepUI - ignoring")
 
 
 class Step:
