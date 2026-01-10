@@ -170,6 +170,25 @@ class SequencerApp(App):
       # switch back to play mode 
       self.ui_delegate._cleanup()
       self._mode = PLAY_MODE
+    elif item == "Delete step":
+      # delete current step then switch back to edit mode
+      assert self.sequence_pos >= 0
+      assert self.sequence_pos < len(self.sequence)
+
+      del self.sequence[self.sequence_pos]
+
+      # BUG: this is going to break when deleting all steps so that
+      # the sequence list is empty. Probably other bits of the
+      # app will break too, and maybe it should be the case that there
+      # is always one step?
+      if self.sequence_pos >= len(self.sequence):
+          self.sequence_pos = len(self.sequence) - 1
+
+      assert self.sequence_pos >= 0
+      assert self.sequence_pos < len(self.sequence)
+
+      self.ui_delegate._cleanup()
+      self._mode = EDIT_MODE
     else:
       print("Selected menu item is unhandled - ignoring")
 
