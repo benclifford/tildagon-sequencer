@@ -99,7 +99,7 @@ class SequencerApp(App):
 
       step=self.sequence[render_step]
 
-      step.render(ctx,render_step, y, text_colour)
+      step.render(self._mode, ctx,render_step, y, text_colour)
 
 
  
@@ -197,6 +197,7 @@ class SequencerApp(App):
       # switch back to play mode 
       self.ui_delegate._cleanup()
       self.ui_delegate = None
+      self.sequence_pos = -1
       self._mode = PLAY_MODE
     elif item == "Delete step":
       # delete current step then switch back to edit mode
@@ -293,7 +294,7 @@ class Step:
     # need to override enter_step
     return True
 
-  def render(self, ctx, render_step, y, text_colour):
+  def render(self, mode, ctx, render_step, y, text_colour):
     text = f"{render_step}: No description"
     tw = ctx.text_width(text)
     ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
@@ -310,7 +311,7 @@ class AllLEDStep(Step):
       tildagonos.leds[n+1] = colour
     tildagonos.leds.write()
 
-  def render(self, ctx, render_step, y, text_colour):
+  def render(self, mode, ctx, render_step, y, text_colour):
     text = f"{render_step}: All LEDs "
     tw = ctx.text_width(text)
     tw2 = ctx.text_width("this")
@@ -336,9 +337,9 @@ class PauseStep(Step):
       self.entered_time = None
     return b
 
-  def render(self, ctx, render_step, y, text_colour):
+  def render(self, mode, ctx, render_step, y, text_colour):
 
-    if self.entered_time is not None:
+    if self.entered_time is not None and mode == PLAY_MODE:
       now = time.ticks_ms()
       duration = self.ms - time.ticks_diff(now, self.entered_time)
     else:
