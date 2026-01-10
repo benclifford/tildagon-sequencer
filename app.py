@@ -147,7 +147,7 @@ class SequencerApp(App):
     else:
       print("Unknown button event - ignoring - mode {self._mode}, event {event}")
 
-  def _handle_menu_back(self, *args, **kwargs):
+  def _handle_menu_back(self):
     # back should back the menu go away and then go to EDIT mode (because
     # is where we came from before the menu)
     print("BACK from Sequencer App menu")
