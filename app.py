@@ -28,11 +28,6 @@ class SequencerApp(App):
 
     self.ui_delegate = None
 
-  def select_handler(*args, **kwargs):
-    print("SELECT from Sequencer App menu")
-  def back_handler(*args, **kwargs):
-    print("BACK from Sequencer App menu")
-
   def update(self, delta):
     # print(f"Update, mode is {self._mode}")
     if not self._foregrounded:
@@ -146,10 +141,23 @@ class SequencerApp(App):
       pass # NOTIMPL: edit menu ... time to learn about how to use menu UI component.
       self._mode = MENU_MODE
       print("Switching to MENU mode")
-      self.ui_delegate = Menu(self, ["Insert step", "Edit step", "Delete step", "Run", "Run in background", "Choose difficulty"], select_handler=self.select_handler, back_handler=self.back_handler)
+      self.ui_delegate = Menu(self, ["Insert step", "Edit step", "Delete step", "Run", "Run in background", "Choose difficulty"], select_handler=self._handle_menu_select, back_handler=self._handle_menu_back)
     elif self._mode == MENU_MODE:
       pass # menu will handle its own button events, we should stay out of the way
     else:
       print("Unknown button event - ignoring - mode {self._mode}, event {event}")
+
+  def _handle_menu_back(self, *args, **kwargs):
+    # back should back the menu go away and then go to EDIT mode (because
+    # is where we came from before the menu)
+    print("BACK from Sequencer App menu")
+    assert self._mode == MENU_MODE, "should be in menu mode"
+    assert isinstance(self.ui_delegate, Menu), "in menu mode, the UI delegate should be Menu"
+    self.ui_delegate._cleanup()
+    self._mode = EDIT_MODE
+
+  def _handle_menu_select(self, *args, **kwargs):
+    print("SELECT from Sequencer App menu")
+
 
 __app_export__ = SequencerApp
