@@ -43,7 +43,10 @@ class SequencerApp(App):
     elif self._mode == MENU_MODE:
       # print("main menu update")
       if self.ui_delegate is None:
-          self.ui_delegate = Menu(self, ["Insert step", "Edit step", "Delete step", "Play", "Play in background", "Choose difficulty"], select_handler=self._handle_menu_select, back_handler=self._handle_menu_back)
+          self.ui_delegate = Menu(self, ["Insert step", "Delete step", "Play"], select_handler=self._handle_menu_select, back_handler=self._handle_menu_back)
+          # TODO: Edit step
+          # TODO: Play in background
+          # TODO: Choose difficulty
       return self.ui_delegate.update(delta)
     elif self._mode == INSERT_STEP_MODE:
       if self.ui_delegate is None:
