@@ -42,7 +42,7 @@ class SequencerApp(App):
     elif self._mode == MENU_MODE:
       # print("main menu update")
       if self.ui_delegate is None:
-          self.ui_delegate = Menu(self, ["Insert step", "Edit step", "Delete step", "Run", "Run in background", "Choose difficulty"], select_handler=self._handle_menu_select, back_handler=self._handle_menu_back)
+          self.ui_delegate = Menu(self, ["Insert step", "Edit step", "Delete step", "Play", "Play in background", "Choose difficulty"], select_handler=self._handle_menu_select, back_handler=self._handle_menu_back)
       return self.ui_delegate.update(delta)
 
   def update_PLAY(self, delta):
@@ -166,5 +166,11 @@ class SequencerApp(App):
     assert self._mode == MENU_MODE, "should be in menu mode"
     assert isinstance(self.ui_delegate, Menu), "in menu mode, the UI delegate should be Menu"
 
+    if item == "Play":
+      # switch back to play mode 
+      self.ui_delegate._cleanup()
+      self._mode = PLAY_MODE
+    else:
+      print("Selected menu item is unhandled - ignoring")
 
 __app_export__ = SequencerApp
