@@ -238,4 +238,22 @@ class InsertStepUI:
     eventbus.remove(ButtonDownEvent, self._handle_buttondown, self.app)
 
   def _handle_buttondown(self, event):
-    self.chosen_colour = (self.chosen_colour + 1) % 4
+    if BUTTON_TYPES["UP"] in event.button:
+      self.chosen_colour = (self.chosen_colour + 1) % 4
+    elif BUTTON_TYPES["DOWN"] in event.button:
+      self.chosen_colour = (self.chosen_colour + 1) % 4
+    elif BUTTON_TYPES["CONFIRM"] in event.button:
+      assert self.app.sequence_pos >= 0
+      assert self.app.sequence_pos < len(self.app.sequence)
+
+      self.app.sequence.insert(self.app.sequence_pos, self.rgb)
+      self.app.sequence_pos += 1
+
+      assert self.app.sequence_pos >= 0
+      assert self.app.sequence_pos < len(self.app.sequence)
+
+      eventbus.remove(ButtonDownEvent, self._handle_buttondown, self.app)
+      self.app._mode = EDIT_MODE
+      self.app.ui_delegate = None
+    else:
+      print("unhandled button event in InsertStepUI - ignoring")
