@@ -20,13 +20,18 @@ OTHER_SIZE = 20
 class SequencerApp(App):
   def __init__(self):
 
-    # This sequence is "commands". Right now a "command" is an RGB tuple
-    # meaning "set all LEDs to this then wait 333ms".
-    self.sequence = [(0,0,0), (255, 0, 255), (0, 255, 0), (0,0,0), (0, 255, 0), (0,0,0)]
+    self.sequence = [AllLEDStep(255,0,255),
+                     PauseStep(500),
+                     AllLEDStep(0,0,0),
+                     PauseStep(500),
+                     AllLEDStep(0,255,0),
+                     PauseStep(500),
+                     AllLEDStep(0,0,0),
+                     PauseStep(5000),
+                     ]
 
     self.sequence_pos = -1  # -1 means next step should be first
     self._foregrounded = False
-    self._last_step_time = 0
 
     self._mode = PLAY_MODE
 
@@ -58,20 +63,20 @@ class SequencerApp(App):
 
   def update_PLAY(self, delta):
 
-    now = time.ticks_ms()
-    delta_ticks = time.ticks_diff(now, self._last_step_time)
+    if self.sequence_pos == -1:
+      self.sequence_pos = 0
+      self.sequence[self.sequence_pos].enter_step()
 
-    if delta_ticks > 333:
-      self._last_step_time = now
+    do_next = self.sequence[self.sequence_pos].progress_step()
 
+    if do_next:
       self.sequence_pos = (self.sequence_pos + 1) % len(self.sequence)
 
       assert self.sequence_pos >= 0
       assert self.sequence_pos < len(self.sequence)
-      colour = self.sequence[self.sequence_pos]
-      for n in range(0,12):
-          tildagonos.leds[n+1] = colour
-      tildagonos.leds.write()
+
+      self.sequence[self.sequence_pos].enter_step()
+
 
  
   def render_step(self, ctx, offset):
@@ -92,12 +97,19 @@ class SequencerApp(App):
 
       ctx.text_align = ctx.LEFT
 
-      text = f"{render_step}: All LEDs "
-      tw = ctx.text_width(text)
-      tw2 = ctx.text_width("this")
-      w = tw + tw2
-      ctx.move_to(int(-w/2), y).rgb(*text_colour).text(text)
-      ctx.move_to(int(-w/2 + tw), y).rgb(*self.sequence[render_step]).text("this")
+      step=self.sequence[render_step]
+
+      if isinstance(step, AllLEDStep):
+        text = f"{render_step}: All LEDs "
+        tw = ctx.text_width(text)
+        tw2 = ctx.text_width("this")
+        w = tw + tw2
+        ctx.move_to(int(-w/2), y).rgb(*text_colour).text(text)
+        ctx.move_to(int(-w/2 + tw), y).rgb(*self.sequence[render_step].rgb).text("this")
+      else:
+        text = f"{render_step}: Pause {step.ms}ms"
+        tw = ctx.text_width(text)
+        ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
 
  
   def draw(self, ctx):
@@ -276,3 +288,38 @@ class InsertStepUI:
       self.app.ui_delegate = None
     else:
       print("unhandled button event in InsertStepUI - ignoring")
+
+
+class Step:
+  def enter_step(self):
+    pass
+
+  def progress_step(self):
+    # by default, step finishes immediately, so that one shot steps only
+    # need to override enter_step
+    return True
+
+
+class AllLEDStep(Step):
+  def __init__(self, r, g, b):
+    self.rgb = (r, g, b)
+
+  def enter_step(self):
+
+    colour = self.rgb
+    for n in range(0,12):
+      tildagonos.leds[n+1] = colour
+    tildagonos.leds.write()
+
+
+class PauseStep(Step):
+  def __init__(self, ms):
+    self.ms = ms
+
+  def enter_step(self):
+    self.entered_time = time.ticks_ms()
+
+  def progress_step(self):
+    now = time.ticks_ms()
+    delta_ticks = time.ticks_diff(now, self.entered_time)
+    return delta_ticks > self.ms
