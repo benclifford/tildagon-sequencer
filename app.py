@@ -4,6 +4,7 @@ from system.eventbus import eventbus
 from tildagonos import tildagonos
 from events.input import BUTTON_TYPES, ButtonDownEvent
 from system.patterndisplay.events import PatternDisable, PatternEnable
+from system.scheduler.events import RequestForegroundPushEvent
 import asyncio
 import math
 import random
@@ -31,20 +32,28 @@ class SequencerApp(App):
                      ]
 
     self.sequence_pos = -1  # -1 means next step should be first
-    self._foregrounded = False
 
     self._mode = PLAY_MODE
 
     self.ui_delegate = None
 
+    self._maximised()
+    eventbus.on(RequestForegroundPushEvent, self._handle_foreground_push, self)
+
+  def _handle_foreground_push(self, event):
+    if event.app == self:
+      print("Foreground push for sequencer app - restoring foreground state")
+      self._maximised()
+    else:
+      print("Foreground push for other app - ignoring")
+
+  def _maximised(self):
+    eventbus.on(ButtonDownEvent, self._handle_buttondown, self)
+    print("Sequencer is disabling pattern in update")
+    eventbus.emit(PatternDisable())
+
   def update(self, delta):
     # print(f"Update, mode is {self._mode}")
-    if not self._foregrounded:
-        # we maybe just regained focus, so (re-)register UI events.
-        # I'm not clear on the favoured way to do that?
-        eventbus.on(ButtonDownEvent, self._handle_buttondown, self)
-        eventbus.emit(PatternDisable())
-        self._foregrounded = True
 
     if self._mode == PLAY_MODE:
       self.update_PLAY(delta)
@@ -155,7 +164,6 @@ class SequencerApp(App):
     elif self._mode == EDIT_MODE and BUTTON_TYPES["CANCEL"] in event.button: 
       eventbus.remove(ButtonDownEvent, self._handle_buttondown, self)
       eventbus.emit(PatternEnable())
-      self._foregrounded = False
       self.minimise()
     elif self._mode == EDIT_MODE and BUTTON_TYPES["UP"] in event.button: 
       if self.sequence_pos > 0:
