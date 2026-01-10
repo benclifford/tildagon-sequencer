@@ -268,7 +268,10 @@ class InsertStepUI:
       assert self.app.sequence_pos >= 0
       assert self.app.sequence_pos < len(self.app.sequence)
 
-      self.app.sequence.insert(self.app.sequence_pos, self.rgb)
+      r = self.rgb[0]
+      g = self.rgb[1]
+      b = self.rgb[2]
+      self.app.sequence.insert(self.app.sequence_pos, AllLEDStep(r, g, b))
       self.app.sequence_pos += 1
 
       assert self.app.sequence_pos >= 0
