@@ -25,13 +25,13 @@ category = "Badge"
 author = "benclifford"
 
 # License of your app as an SPDX identifier: <https://spdx.org/licenses/>
-license = "0BSD"
+license = "GPL-3.0-only"
 
 # URL to the repository of your app.
-url = "https://www.github.com/hughrawlinson/tildagon-demo"
+url = "https://www.github.com/benclifford/tildagon-sequencer"
 
 # Description of your app.  Maximum 140 characters!
-description = "Sequencer for actions"
+description = "Experimental on-Tildagon programming environment"
 
 # Version number of your app.  If you push a commit where this number is
 # increased, we interpret this as a new version being released.
