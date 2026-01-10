@@ -240,7 +240,7 @@ __app_export__ = SequencerApp
 class InsertStepUI:
   def __init__(self, app):
     self.app = app
-    self.ui_delegate = Menu(self.app, ["All LEDs", "Pause"], select_handler=self._handle_menu_select, back_handler=self._handle_menu_back)
+    self.ui_delegate = Menu(self.app, ["All LEDs", "Pause", "Count loops"], select_handler=self._handle_menu_select, back_handler=self._handle_menu_back)
 
   def update(self, delta):
     self.ui_delegate.update(delta)
@@ -262,6 +262,8 @@ class InsertStepUI:
       self.ui_delegate = InsertAllLEDStepUI(self.app)
     elif item == "Pause":
       self.ui_delegate = InsertPauseStepUI(self.app)
+    elif item == "Count loops":
+      self.ui_delegate = InsertCountLoopsUI(self.app)
     else:
       assert False, "No UI to create this step type"
 
@@ -274,6 +276,25 @@ class InsertStepUI:
     self.app.ui_delegate = None
     self.app._mode = EDIT_MODE
 
+
+class InsertCountLoopsUI:
+  def __init__(self, app):
+    self.app = app
+
+  def update(self, delta):
+    self.app.sequence.insert(self.app.sequence_pos, CountLoopsStep())
+    self.app.sequence_pos += 1
+
+    assert self.app.sequence_pos >= 0
+    assert self.app.sequence_pos < len(self.app.sequence)
+
+    # and remove ourselves from the app
+    self.app.ui_delegate = None
+    self.app._mode = EDIT_MODE
+
+
+  def draw(self, ctx):
+    pass
 
 class InsertPauseStepUI:
   def __init__(self, app):
@@ -439,5 +460,18 @@ class PauseStep(Step):
       duration = self.ms
 
     text = f"{render_step}: Pause {duration}ms"
+    tw = ctx.text_width(text)
+    ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
+
+
+class CountLoopsStep(Step):
+  def __init__(self):
+    self.count = 0
+
+  def enter_step(self):
+    self.count += 1
+
+  def render(self, mode, ctx, render_step, y, text_colour):
+    text = f"{render_step}: Counted {self.count} times"
     tw = ctx.text_width(text)
     ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
