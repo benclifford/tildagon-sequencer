@@ -12,6 +12,7 @@ import time
 PLAY_MODE = 0
 EDIT_MODE = 1
 MENU_MODE = 2
+INSERT_STEP_MODE = 3
 
 class SequencerApp(App):
   def __init__(self):
@@ -44,6 +45,10 @@ class SequencerApp(App):
       if self.ui_delegate is None:
           self.ui_delegate = Menu(self, ["Insert step", "Edit step", "Delete step", "Play", "Play in background", "Choose difficulty"], select_handler=self._handle_menu_select, back_handler=self._handle_menu_back)
       return self.ui_delegate.update(delta)
+    elif self._mode == INSERT_STEP_MODE:
+      if self.ui_delegate is None:
+        self.ui_delegate = InsertStepUI(self)
+      return self.ui_delegate.update(delta)
 
   def update_PLAY(self, delta):
 
@@ -66,9 +71,8 @@ class SequencerApp(App):
 
     clear_background(ctx)
 
-    # delegate drawing completely to the menu if it is active
-    if self._mode == MENU_MODE:
-      # print("main menu draw")
+    # delegate drawing completely if a UI delegate is active
+    if self.ui_delegate is not None:
       return self.ui_delegate.draw(ctx)
 
     if self._mode == PLAY_MODE:
@@ -159,6 +163,7 @@ class SequencerApp(App):
     assert self._mode == MENU_MODE, "should be in menu mode"
     assert isinstance(self.ui_delegate, Menu), "in menu mode, the UI delegate should be Menu"
     self.ui_delegate._cleanup()
+    self.ui_delegate = None
     self._mode = EDIT_MODE
 
   def _handle_menu_select(self, item, idx):
@@ -169,6 +174,7 @@ class SequencerApp(App):
     if item == "Play":
       # switch back to play mode 
       self.ui_delegate._cleanup()
+      self.ui_delegate = None
       self._mode = PLAY_MODE
     elif item == "Delete step":
       # delete current step then switch back to edit mode
@@ -188,8 +194,48 @@ class SequencerApp(App):
       assert self.sequence_pos < len(self.sequence)
 
       self.ui_delegate._cleanup()
+      self.ui_delegate = None
       self._mode = EDIT_MODE
+    elif item == "Insert step":
+      self.ui_delegate._cleanup()
+      self.ui_delegate = None
+      self._mode = INSERT_STEP_MODE
     else:
       print("Selected menu item is unhandled - ignoring")
 
 __app_export__ = SequencerApp
+
+
+class InsertStepUI:
+  def __init__(self, app):
+    self.app = app
+    self.chosen_colour = 0
+    self.rgb = (0,0,0)
+    eventbus.on(ButtonDownEvent, self._handle_buttondown, self.app)
+
+  def update(self, delta):
+    if self.chosen_colour == 0:
+      self.rgb = (255,0,0)
+    elif self.chosen_colour == 1:
+      self.rgb = (0,255,0)
+    elif self.chosen_colour == 2:
+      self.rgb = (0,0,255)
+    elif self.chosen_colour == 3:
+      self.rgb = (0,0,0)
+    else:
+      self.rgb = (0,0,0)
+
+    for n in range(0,12):
+          tildagonos.leds[n+1] = self.rgb
+    tildagonos.leds.write()
+
+  def draw(self, ctx):
+
+    ctx.arc(0, 0, 60, 0, 2 * math.pi, True)
+    ctx.rgb(*self.rgb).fill()
+
+  def _cleanup():
+    eventbus.remove(ButtonDownEvent, self._handle_buttondown, self.app)
+
+  def _handle_buttondown(self, event):
+    self.chosen_colour = (self.chosen_colour + 1) % 4
