@@ -226,7 +226,7 @@ class InsertStepUI:
       self.rgb = (0,0,0)
 
     for n in range(0,12):
-          tildagonos.leds[n+1] = self.rgb
+      tildagonos.leds[n+1] = self.rgb
     tildagonos.leds.write()
 
   def draw(self, ctx):
