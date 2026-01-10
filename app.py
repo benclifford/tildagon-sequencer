@@ -14,6 +14,9 @@ EDIT_MODE = 1
 MENU_MODE = 2
 INSERT_STEP_MODE = 3
 
+LIVE_SIZE = 20
+OTHER_SIZE = 20
+
 class SequencerApp(App):
   def __init__(self):
 
@@ -69,6 +72,33 @@ class SequencerApp(App):
       for n in range(0,12):
           tildagonos.leds[n+1] = colour
       tildagonos.leds.write()
+
+ 
+  def render_step(self, ctx, offset):
+    if offset == 0:
+      text_colour = (255,255,0)
+      y = 0 
+      ctx.font_size = LIVE_SIZE
+    else:
+      text_colour = (128,128,128)
+      y = LIVE_SIZE/2 + offset * (OTHER_SIZE) - (OTHER_SIZE/2)
+      ctx.font_size = OTHER_SIZE
+
+    render_step = self.sequence_pos + offset
+
+    if render_step >= 0 and render_step < len(self.sequence):
+      assert render_step >= 0
+      assert render_step < len(self.sequence)
+
+      ctx.text_align = ctx.LEFT
+
+      text = f"{render_step}: All LEDs "
+      tw = ctx.text_width(text)
+      tw2 = ctx.text_width("this")
+      w = tw + tw2
+      ctx.move_to(int(-w/2), y).rgb(*text_colour).text(text)
+      ctx.move_to(int(-w/2 + tw), y).rgb(*self.sequence[render_step]).text("this")
+
  
   def draw(self, ctx):
 
@@ -93,31 +123,17 @@ class SequencerApp(App):
     ctx.arc(0, 0, 105, 0, 2 * math.pi, True)
     ctx.rgb(0, 0, 0).fill()
 
-    ctx.text_align = ctx.CENTER
     ctx.text_baseline = ctx.MIDDLE
 
-    LIVE_SIZE = 20
-    OTHER_SIZE = 20
 
     if self.sequence_pos >= 0:
       assert self.sequence_pos >= 0
       assert self.sequence_pos < len(self.sequence)
-      ctx.font_size = LIVE_SIZE
-      ctx.move_to(0, 0).rgb(255,255,0).text(f"{self.sequence_pos}: {self.sequence[self.sequence_pos]}")
+      self.render_step(ctx, 0)
 
-      ctx.font_size = OTHER_SIZE
       for n in range(1,8):
-        y = LIVE_SIZE/2 + n * (OTHER_SIZE) - (OTHER_SIZE/2)
-
-        render_step = self.sequence_pos - n
-        if render_step >= 0:
-          assert render_step < len(self.sequence)
-          ctx.move_to(0, -y).gray(1).text(f"{render_step}: {self.sequence[render_step]}")
-
-        render_step = self.sequence_pos + n
-        if render_step < len(self.sequence):
-          assert render_step >= 0
-          ctx.move_to(0, y).gray(1).text(f"{render_step}: {self.sequence[render_step]}")
+        self.render_step(ctx, n)
+        self.render_step(ctx, -n)
     else:
       ctx.font_size = LIVE_SIZE
       ctx.move_to(0, 0).gray(1).text(f"NO EXECUTION YET")
