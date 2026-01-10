@@ -99,17 +99,8 @@ class SequencerApp(App):
 
       step=self.sequence[render_step]
 
-      if isinstance(step, AllLEDStep):
-        text = f"{render_step}: All LEDs "
-        tw = ctx.text_width(text)
-        tw2 = ctx.text_width("this")
-        w = tw + tw2
-        ctx.move_to(int(-w/2), y).rgb(*text_colour).text(text)
-        ctx.move_to(int(-w/2 + tw), y).rgb(*self.sequence[render_step].rgb).text("this")
-      else:
-        text = f"{render_step}: Pause {step.ms}ms"
-        tw = ctx.text_width(text)
-        ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
+      step.render(ctx,render_step, y, text_colour)
+
 
  
   def draw(self, ctx):
@@ -299,6 +290,11 @@ class Step:
     # need to override enter_step
     return True
 
+  def render(self, ctx, render_step, y, text_colour):
+    text = f"{render_step}: No description"
+    tw = ctx.text_width(text)
+    ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
+
 
 class AllLEDStep(Step):
   def __init__(self, r, g, b):
@@ -311,15 +307,40 @@ class AllLEDStep(Step):
       tildagonos.leds[n+1] = colour
     tildagonos.leds.write()
 
+  def render(self, ctx, render_step, y, text_colour):
+    text = f"{render_step}: All LEDs "
+    tw = ctx.text_width(text)
+    tw2 = ctx.text_width("this")
+    w = tw + tw2
+    ctx.move_to(int(-w/2), y).rgb(*text_colour).text(text)
+    ctx.move_to(int(-w/2 + tw), y).rgb(*self.rgb).text("this")
+
 
 class PauseStep(Step):
   def __init__(self, ms):
     self.ms = ms
+    self.entered_time = None
 
   def enter_step(self):
     self.entered_time = time.ticks_ms()
 
   def progress_step(self):
+    assert self.entered_time is not None, "Step should have been entered before being progressed"
     now = time.ticks_ms()
     delta_ticks = time.ticks_diff(now, self.entered_time)
-    return delta_ticks > self.ms
+    b = delta_ticks > self.ms
+    if b:
+      self.entered_time = None
+    return b
+
+  def render(self, ctx, render_step, y, text_colour):
+
+    if self.entered_time is not None:
+      now = time.ticks_ms()
+      duration = self.ms - time.ticks_diff(now, self.entered_time)
+    else:
+      duration = self.ms
+
+    text = f"{render_step}: Pause {duration}ms"
+    tw = ctx.text_width(text)
+    ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
