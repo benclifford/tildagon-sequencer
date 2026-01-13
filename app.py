@@ -27,6 +27,7 @@ class SequencerApp(App):
                      PauseStep(500),
                      AllLEDStep(0,0,255),
                      PauseStep(500),
+                     EndStep(),
                      WhenPlayStep(),
                      AllLEDStep(255,0,255),
                      PauseStep(500),
@@ -35,6 +36,7 @@ class SequencerApp(App):
                      AllLEDStep(0,255,0),
                      PauseStep(500),
                      AllLEDStep(0,0,0),
+                     EndStep(),
                      ]
 
     self.sequence_pos = -1  # don't run anything
@@ -603,3 +605,13 @@ class WhenPlayStep(Step):
 
   def reset(self):
     self._start = True
+
+
+class EndStep(Step):
+  def progress_step(self):
+    return False
+
+  def render(self, mode, ctx, render_step, y, text_colour):
+    text = "End block"
+    tw = ctx.text_width(text)
+    ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
