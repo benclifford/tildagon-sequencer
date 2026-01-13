@@ -1,5 +1,7 @@
 # Sequencer
 
+![Screenshot of sequencer UI](imgs/screenshot.jpg)
+
 ## Install
 
 ```
