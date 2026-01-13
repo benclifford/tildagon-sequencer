@@ -32,3 +32,9 @@ You can:
 * delete steps
 * add steps
 * play the program
+
+## The default program
+
+The default program will trigger a sequence of LED flashes. Then it will
+wait for any button to be pressed and do some more flashing every time
+that happens.

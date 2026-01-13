@@ -8,6 +8,7 @@ from system.scheduler.events import RequestForegroundPushEvent
 import asyncio
 import math
 import random
+import sys
 import time
 
 PLAY_MODE = 0
@@ -20,25 +21,37 @@ OTHER_SIZE = 20
 
 class SequencerApp(App):
   def __init__(self):
-
-    self.sequence = [AllLEDStep(255,0,255),
+   try:
+    self.sequence = [WhenButtonPushedStep(self),
+                     AllLEDStep(255,255,255),
+                     PauseStep(500),
+                     AllLEDStep(0,0,255),
+                     PauseStep(500),
+                     WhenPlayStep(),
+                     AllLEDStep(255,0,255),
                      PauseStep(500),
                      AllLEDStep(0,0,0),
                      PauseStep(500),
                      AllLEDStep(0,255,0),
                      PauseStep(500),
                      AllLEDStep(0,0,0),
-                     PauseStep(5000),
                      ]
 
-    self.sequence_pos = -1  # -1 means next step should be first
+    self.sequence_pos = -1  # don't run anything
 
     self._mode = PLAY_MODE
+    self._reset_steps()
 
     self.ui_delegate = None
 
     self._maximised()
     eventbus.on(RequestForegroundPushEvent, self._handle_foreground_push, self)
+   except Exception as e:
+    sys.print_exception(e)
+
+  def _reset_steps(self):
+    for step in self.sequence:
+      step.reset()
 
   def _handle_foreground_push(self, event):
     if event.app == self:
@@ -72,23 +85,45 @@ class SequencerApp(App):
 
   def update_PLAY(self, delta):
 
-    if self.sequence_pos == -1:
-      self.sequence_pos = 0
-      self.sequence[self.sequence_pos].enter_step()
+    if self.sequence_pos < 0:
+      # nothing to run
+      pass
 
-    do_next = self.sequence[self.sequence_pos].progress_step()
+    else:
+      do_next = self.sequence[self.sequence_pos].progress_step()
 
-    if do_next:
-      self.sequence_pos = (self.sequence_pos + 1) % len(self.sequence)
+      if do_next:
+        old_pos = self.sequence_pos
+        self.sequence_pos = (self.sequence_pos + 1)
+        if self.sequence_pos >= len(self.sequence):
+          self.sequence_pos = -old_pos
+        else: 
+          assert self.sequence_pos >= 0
+          assert self.sequence_pos < len(self.sequence)
 
-      assert self.sequence_pos >= 0
-      assert self.sequence_pos < len(self.sequence)
+          self.sequence[self.sequence_pos].enter_step()
 
-      self.sequence[self.sequence_pos].enter_step()
+    for sn in range(0, len(self.sequence)):
+      if self.sequence[sn].poll_for_when():
+        # guard for the when being the last statement, so there
+        # is no sn+1
+        if sn+1 < len(self.sequence):
+          # TODO: stack-style management to be able to return
+          # to main program. maybe fits in with a more nested
+          # data structure then a list of steps? to go along
+          # with ifs and repeats?
+          self.sequence_pos = sn+1
+          self.sequence[self.sequence_pos].enter_step()
+          # so now we have multiple steps that we have entered
 
-
+          # break to avoid handling any other when blocks in
+          # the same iteration
+          break
+        else:
+          # ignore this when block as it does nothing.
+          pass
  
-  def render_step(self, ctx, offset):
+  def render_step(self, ctx, render_base, offset):
     if offset == 0:
       text_colour = (255,255,0)
       y = 0 
@@ -98,7 +133,7 @@ class SequencerApp(App):
       y = LIVE_SIZE/2 + offset * (OTHER_SIZE) - (OTHER_SIZE/2)
       ctx.font_size = OTHER_SIZE
 
-    render_step = self.sequence_pos + offset
+    render_step = render_base + offset
 
     if render_step >= 0 and render_step < len(self.sequence):
       assert render_step >= 0
@@ -108,8 +143,7 @@ class SequencerApp(App):
 
       step=self.sequence[render_step]
 
-      step.render(self._mode, ctx,render_step, y, text_colour)
-
+      step.render(self._mode, ctx, render_step, y, text_colour)
 
  
   def draw(self, ctx):
@@ -137,18 +171,18 @@ class SequencerApp(App):
 
     ctx.text_baseline = ctx.MIDDLE
 
-
     if self.sequence_pos >= 0:
-      assert self.sequence_pos >= 0
-      assert self.sequence_pos < len(self.sequence)
-      self.render_step(ctx, 0)
-
-      for n in range(1,8):
-        self.render_step(ctx, n)
-        self.render_step(ctx, -n)
+      render_base = self.sequence_pos
     else:
-      ctx.font_size = LIVE_SIZE
-      ctx.move_to(0, 0).gray(1).text(f"NO EXECUTION YET")
+      render_base = -self.sequence_pos
+
+    assert render_base >= 0
+    assert render_base < len(self.sequence)
+    self.render_step(ctx, render_base, 0)
+
+    for n in range(1,8):
+      self.render_step(ctx, render_base, n)
+      self.render_step(ctx, render_base, -n)
 
   def _handle_buttondown(self, event):
     # Button behaviours:
@@ -161,6 +195,8 @@ class SequencerApp(App):
 
     if self._mode == PLAY_MODE and BUTTON_TYPES["CANCEL"] in event.button:
       self._mode = EDIT_MODE
+      self._reset_steps()
+      self.sequence_pos = abs(self.sequence_pos)
     elif self._mode == EDIT_MODE and BUTTON_TYPES["CANCEL"] in event.button: 
       eventbus.remove(ButtonDownEvent, self._handle_buttondown, self)
       eventbus.emit(PatternEnable())
@@ -240,7 +276,7 @@ __app_export__ = SequencerApp
 class InsertStepUI:
   def __init__(self, app):
     self.app = app
-    self.ui_delegate = Menu(self.app, ["All LEDs", "Pause", "Count loops"], select_handler=self._handle_menu_select, back_handler=self._handle_menu_back)
+    self.ui_delegate = Menu(self.app, ["All LEDs", "Pause", "Count loops", "When button pushed"], select_handler=self._handle_menu_select, back_handler=self._handle_menu_back)
 
   def update(self, delta):
     self.ui_delegate.update(delta)
@@ -264,6 +300,8 @@ class InsertStepUI:
       self.ui_delegate = InsertPauseStepUI(self.app)
     elif item == "Count loops":
       self.ui_delegate = InsertCountLoopsUI(self.app)
+    elif item == "When button pushed":
+      self.ui_delegate = InsertWhenButtonPushedUI(self.app)
     else:
       assert False, "No UI to create this step type"
 
@@ -275,6 +313,25 @@ class InsertStepUI:
     # and remove ourselves from the app
     self.app.ui_delegate = None
     self.app._mode = EDIT_MODE
+
+class InsertWhenButtonPushedUI:
+  def __init__(self, app):
+    self.app = app
+
+  def update(self, delta):
+    self.app.sequence.insert(self.app.sequence_pos, WhenButtonPushedStep(self.app))
+    self.app.sequence_pos += 1
+
+    assert self.app.sequence_pos >= 0
+    assert self.app.sequence_pos < len(self.app.sequence)
+
+    # and remove ourselves from the app
+    self.app.ui_delegate = None
+    self.app._mode = EDIT_MODE
+
+
+  def draw(self, ctx):
+    pass
 
 
 class InsertCountLoopsUI:
@@ -413,6 +470,16 @@ class Step:
     tw = ctx.text_width(text)
     ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
 
+  def poll_for_when(self):
+    # If this is a When step that has fired (and so wants to run events),
+    # return True (once) and the executor will start running at the
+    # step after this one.
+    return False
+
+  def reset(self):
+    # Called to reset the step, for example when play stops or starts
+    pass
+
 
 class AllLEDStep(Step):
   def __init__(self, r, g, b):
@@ -437,7 +504,7 @@ class AllLEDStep(Step):
 class PauseStep(Step):
   def __init__(self, ms):
     self.ms = ms
-    self.entered_time = None
+    self.reset()
 
   def enter_step(self):
     self.entered_time = time.ticks_ms()
@@ -463,10 +530,13 @@ class PauseStep(Step):
     tw = ctx.text_width(text)
     ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
 
+  def reset(self):
+    self.entered_time = None
+
 
 class CountLoopsStep(Step):
   def __init__(self):
-    self.count = 0
+    self.reset()
 
   def enter_step(self):
     self.count += 1
@@ -475,3 +545,61 @@ class CountLoopsStep(Step):
     text = f"{render_step}: Counted {self.count} times"
     tw = ctx.text_width(text)
     ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
+
+  def reset(self):
+    self.count = 0
+
+class WhenButtonPushedStep(Step):
+
+  def __init__(self, app):
+    self.app = app
+
+    self.pressed = False
+    eventbus.on(ButtonDownEvent, self._handle_buttondown, self.app)
+
+  def _handle_buttondown(self, event):
+    # match any button except CANCEL
+    if self.app._mode == PLAY_MODE and BUTTON_TYPES["CANCEL"] not in event.button:
+      self.pressed = True
+
+  def poll_for_when(self):
+    if self.pressed:
+      self.pressed = False
+      return True
+    else:
+      return False
+
+  # This is to stop execution if we flow onto this step.
+  # This isn't the long term structure of how I want things
+  # to be, but it will maybe do for now, until I maybe get
+  # some more hierarchical editing implemented.
+  def progress_step(self):
+    return False
+
+  def render(self, mode, ctx, render_step, y, text_colour):
+    text = f"When button pushed"   # : {self.pressed}"
+    tw = ctx.text_width(text)
+    ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
+
+class WhenPlayStep(Step):
+
+  def __init__(self):
+    self._start = False
+
+  def poll_for_when(self):
+    if self._start:
+      self._start = False
+      return True
+    else:
+      return False
+
+  def progress_step(self):
+    return False
+
+  def render(self, mode, ctx, render_step, y, text_colour):
+    text = f"When play starts"  # : {self._start}"
+    tw = ctx.text_width(text)
+    ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
+
+  def reset(self):
+    self._start = True
