@@ -582,6 +582,10 @@ class WhenButtonPushedStep(Step):
     text = f"When button pushed"   # : {self.pressed}"
     tw = ctx.text_width(text)
     ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
+    ctx.rgb(255,0,0).begin_path()
+    ctx.move_to(-240, y - LIVE_SIZE/2)
+    ctx.line_to(240, y - LIVE_SIZE/2)
+    ctx.stroke()
 
 class WhenPlayStep(Step):
 
@@ -602,6 +606,10 @@ class WhenPlayStep(Step):
     text = f"When play starts"  # : {self._start}"
     tw = ctx.text_width(text)
     ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
+    ctx.rgb(255,0,0).begin_path()
+    ctx.move_to(-240, y - LIVE_SIZE/2)
+    ctx.line_to(240, y - LIVE_SIZE/2)
+    ctx.stroke()
 
   def reset(self):
     self._start = True
@@ -615,3 +623,7 @@ class EndStep(Step):
     text = "End block"
     tw = ctx.text_width(text)
     ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
+    ctx.rgb(255,0,0).begin_path()
+    ctx.move_to(-240, y + LIVE_SIZE/2)
+    ctx.line_to(240, y + LIVE_SIZE/2)
+    ctx.stroke()
