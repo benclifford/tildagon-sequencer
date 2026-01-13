@@ -9,6 +9,12 @@ mpremote fs mkdir /apps/sequencer
 mpremote fs cp app.py :/apps/sequencer/
 ```
 
+## The default program
+
+The default program will trigger a sequence of LED flashes. Then it will
+wait for any button to be pressed and do some more flashing every time
+that happens.
+
 ## Play mode
 
 When you first load the app, it will load a default program and start
@@ -35,8 +41,12 @@ You can:
 * add steps
 * play the program
 
-## The default program
+## Step creators
 
-The default program will trigger a sequence of LED flashes. Then it will
-wait for any button to be pressed and do some more flashing every time
-that happens.
+When you add a step, you will get an editor specific to the kind of step.
+Some steps need no editor, but:
+
+The colour picker: scroll UP and DOWN to choose from a very limited palette:
+red, green, blue, off/black. choose CONFIRM to select that colour.
+
+The delay picker: use the menu to pick one of several preconfigured delays.
