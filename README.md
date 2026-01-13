@@ -12,7 +12,7 @@ mpremote fs cp app.py :/apps/sequencer/
 ## The default program
 
 The default program will trigger a sequence of LED flashes. Then it will
-wait for any button to be pressed and do some more flashing every time
+wait for any button (except CANCEL) to be pressed and do some more flashing every time
 that happens.
 
 ## Play mode
