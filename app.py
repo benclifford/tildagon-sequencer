@@ -309,6 +309,7 @@ class SequencerApp(App):
       self._mode = PLAY_MODE
       # but also minimise, without restoring a bunch of state
       # like patterns or other events, so that things still play.
+      eventbus.remove(ButtonDownEvent, self._handle_buttondown, self)
       self.minimise()
     elif item == "Delete step":
       # delete current step then switch back to edit mode
