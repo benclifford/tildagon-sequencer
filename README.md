@@ -46,6 +46,10 @@ You can:
 * delete steps
 * add steps
 * play the program
+* play the program in background - this will play like play mode, but return
+  you to the App Launcher so you can do other things. Your program will continue
+  running (although 'When button pushed' events won't happen). You can go back
+  into normal play mode by navigating back into the sequencer app.
 
 ## Step creators
 
