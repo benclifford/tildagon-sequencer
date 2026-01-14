@@ -12,8 +12,14 @@ mpremote fs cp app.py :/apps/sequencer/
 ## The default program
 
 The default program will trigger a sequence of LED flashes. Then it will
-wait for any button (except CANCEL) to be pressed and do some more flashing every time
-that happens.
+wait for:
+
+* any button (except CANCEL) to be pressed and do some more flashing every time
+  that happens.
+
+* the badge to be turned upright (from e.g. flat on a table) and turn the
+  LEDs green
+
 
 ## Play mode
 
