@@ -109,7 +109,7 @@ class SequencerApp(App):
     elif self._mode == MENU_MODE:
       # print("main menu update")
       if self.ui_delegate is None:
-          self.ui_delegate = Menu(self, ["Insert step above", "Delete step", "Play"], select_handler=self._handle_menu_select, back_handler=self._handle_menu_back)
+          self.ui_delegate = Menu(self, ["Insert step above", "Delete step", "Play", "Play in background"], select_handler=self._handle_menu_select, back_handler=self._handle_menu_back)
           # TODO: Edit step
           # TODO: Play in background
           # TODO: Choose difficulty
@@ -301,6 +301,15 @@ class SequencerApp(App):
       self.ui_delegate = None
       self.sequence_pos = -1
       self._mode = PLAY_MODE
+    elif item == "Play in background":
+      # start playing...
+      self.ui_delegate._cleanup()
+      self.ui_delegate = None
+      self.sequence_pos = -1
+      self._mode = PLAY_MODE
+      # but also minimise, without restoring a bunch of state
+      # like patterns or other events, so that things still play.
+      self.minimise()
     elif item == "Delete step":
       # delete current step then switch back to edit mode
       assert self.sequence_pos >= 0
