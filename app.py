@@ -660,9 +660,6 @@ class WhenPlayStep(BlockStep):
     # block here.
     return False
 
-# TODO: end step now needs to return control to its
-# corresponding start step - rather than do any particular
-# control itself.
 class EndStep(Step):
   def __init__(self):
     self._start_step = None
