@@ -29,13 +29,18 @@ class SequencerApp(App):
                      PauseStep(500),
                      EndStep(),
                      WhenPlayStep(),
-                     AllLEDStep(255,0,255),
-                     PauseStep(500),
-                     AllLEDStep(0,0,0),
-                     PauseStep(500),
-                     AllLEDStep(0,255,0),
-                     PauseStep(500),
-                     AllLEDStep(0,0,0),
+                       AllLEDStep(255,0,255),
+                       PauseStep(500),
+                       AllLEDStep(0,0,0),
+                       PauseStep(500),
+                       AllLEDStep(0,255,0),
+                       PauseStep(500),
+                       RepeatForeverStep(),
+                         AllLEDStep(8,8,8),
+                         PauseStep(500),
+                         AllLEDStep(0,0,0),
+                         PauseStep(500),
+                       EndStep(),
                      EndStep(),
                      ]
 
@@ -52,8 +57,27 @@ class SequencerApp(App):
     sys.print_exception(e)
 
   def _reset_steps(self):
+    end_stack = []
+    n = 0
     for step in self.sequence:
       step.reset()
+
+      step._step_number = n
+ 
+      if isinstance(step, BlockStep):
+        print(f"Appending to block stack for step {n}, {step}")
+        print(f"Stack: {end_stack}")
+        end_stack.append(step)
+      if isinstance(step, EndStep):
+        print(f"Popping from block stack for step {n}, {step}")
+        step._start_step = end_stack.pop()
+        print(f"Stack: {end_stack}")
+
+      n += 1
+
+    # TODO: the UI needs to enforce this too, because otherwise users will
+    # easily violate this.
+    assert end_stack == [], f"end stack is not empty after step reset: {end_stack}"
 
   def _handle_foreground_push(self, event):
     if event.app == self:
@@ -94,7 +118,9 @@ class SequencerApp(App):
     else:
       do_next = self.sequence[self.sequence_pos].progress_step()
 
-      if do_next:
+      # n.b. this is not the same as "if do_next:" because do_next
+      # is richer than a bool
+      if do_next is True:
         old_pos = self.sequence_pos
         self.sequence_pos = (self.sequence_pos + 1)
         if self.sequence_pos >= len(self.sequence):
@@ -104,6 +130,12 @@ class SequencerApp(App):
           assert self.sequence_pos < len(self.sequence)
 
           self.sequence[self.sequence_pos].enter_step()
+      elif do_next is False:
+        pass # do nothing
+      else:
+        assert isinstance(do_next, int), f"do_next not an int: {do_next}"
+        self.sequence_pos = do_next
+        self.sequence[self.sequence_pos].enter_step()
 
     for sn in range(0, len(self.sequence)):
       if self.sequence[sn].poll_for_when():
@@ -464,7 +496,9 @@ class Step:
 
   def progress_step(self):
     # by default, step finishes immediately, so that one shot steps only
-    # need to override enter_step
+    # need to override enter_step. 
+    # return True for "move to next step", False for "stay in this step",
+    # or an integer to jump to that step number.
     return True
 
   def render(self, mode, ctx, render_step, y, text_colour):
@@ -481,6 +515,10 @@ class Step:
   def reset(self):
     # Called to reset the step, for example when play stops or starts
     pass
+
+
+# kind of step that pairs with an EndStep to scope out a block of steps
+class BlockStep(Step): ...
 
 
 class AllLEDStep(Step):
@@ -551,7 +589,7 @@ class CountLoopsStep(Step):
   def reset(self):
     self.count = 0
 
-class WhenButtonPushedStep(Step):
+class WhenButtonPushedStep(BlockStep):
 
   def __init__(self, app):
     self.app = app
@@ -587,7 +625,11 @@ class WhenButtonPushedStep(Step):
     ctx.line_to(240, y - LIVE_SIZE/2)
     ctx.stroke()
 
-class WhenPlayStep(Step):
+  def progress_end_step(self):
+    # block here.
+    return False
+
+class WhenPlayStep(BlockStep):
 
   def __init__(self):
     self._start = False
@@ -614,16 +656,37 @@ class WhenPlayStep(Step):
   def reset(self):
     self._start = True
 
-
-class EndStep(Step):
-  def progress_step(self):
+  def progress_end_step(self):
+    # block here.
     return False
+
+# TODO: end step now needs to return control to its
+# corresponding start step - rather than do any particular
+# control itself.
+class EndStep(Step):
+  def __init__(self):
+    self._start_step = None
+    # this should be set dynamically at start of execution to the
+    # executor-detected start step.
+
+  def progress_step(self):
+    assert isinstance(self._start_step, BlockStep), f"start step should be a BlockStep: {self._start_step}"
+    return self._start_step.progress_end_step()
 
   def render(self, mode, ctx, render_step, y, text_colour):
     text = "End block"
     tw = ctx.text_width(text)
+
+    # TODO: This line doesn't work nicely when the end block is for an
+    # inner block, not an outer-when. What should happen here is part of
+    # the bigger question about how to represent nested blocks.
     ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
     ctx.rgb(255,0,0).begin_path()
     ctx.move_to(-240, y + LIVE_SIZE/2)
     ctx.line_to(240, y + LIVE_SIZE/2)
     ctx.stroke()
+
+class RepeatForeverStep(BlockStep):
+  def progress_end_step(self):
+    # continue from the step we were at before
+    return self._step_number + 1
