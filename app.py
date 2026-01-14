@@ -20,6 +20,8 @@ INSERT_STEP_MODE = 3
 LIVE_SIZE = 20
 OTHER_SIZE = 20
 
+STEP_PERIOD_MS = 100
+
 class SequencerApp(App):
   def __init__(self):
    try:
@@ -52,6 +54,10 @@ class SequencerApp(App):
 
     self._mode = PLAY_MODE
     self._reset_steps()
+
+    # so that two different polling loops can run
+    # a poll for step
+    self._last_step_time_ms = 0
 
     self.ui_delegate = None
 
@@ -99,7 +105,7 @@ class SequencerApp(App):
     # print(f"Update, mode is {self._mode}")
 
     if self._mode == PLAY_MODE:
-      self.update_PLAY(delta)
+      self.either_update_PLAY(delta)
     elif self._mode == MENU_MODE:
       # print("main menu update")
       if self.ui_delegate is None:
@@ -113,7 +119,21 @@ class SequencerApp(App):
         self.ui_delegate = InsertStepUI(self)
       return self.ui_delegate.update(delta)
 
-  def update_PLAY(self, delta):
+  def background_update(self, delta):
+    if self._mode == PLAY_MODE:
+      self.either_update_PLAY(delta)
+
+  # this can be called as often as you like from as many tasks as
+  # you like - specifically intended to be called from both update
+  # and the background_update call.
+  def either_update_PLAY(self, delta):
+    now = time.ticks_ms()
+    delta_ticks = time.ticks_diff(now, self._last_step_time_ms)
+    if delta_ticks >= STEP_PERIOD_MS and self._mode == PLAY_MODE:
+      self.do_update_PLAY(delta)
+      self._last_step_time_ms = now
+
+  def do_update_PLAY(self, delta):
 
     if self.sequence_pos < 0:
       # nothing to run
