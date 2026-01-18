@@ -26,11 +26,12 @@ class SequencerApp(App):
   def __init__(self):
    try:
     self.sequence = [WhenButtonPushedStep(self),
-                     LEDStep(255,255,255),
-                     PauseStep(500),
-                     LEDStep(0,0,255),
-                     PauseStep(500),
+                       LEDStep(255,255,255),
+                       PauseStep(500),
+                       LEDStep(0,0,255),
+                       PauseStep(500),
                      EndStep(),
+
                      WhenPlayStep(),
                        LEDStep(255,0,255),
                        PauseStep(500),
@@ -45,6 +46,7 @@ class SequencerApp(App):
                          PauseStep(500),
                        EndStep(),
                      EndStep(),
+
                      WhenIMUUpright(),
                        LEDStep(0,255,0),
                      EndStep(),
