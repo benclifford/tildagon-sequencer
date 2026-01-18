@@ -26,27 +26,27 @@ class SequencerApp(App):
   def __init__(self):
    try:
     self.sequence = [WhenButtonPushedStep(self),
-                     AllLEDStep(255,255,255),
+                     LEDStep(255,255,255),
                      PauseStep(500),
-                     AllLEDStep(0,0,255),
+                     LEDStep(0,0,255),
                      PauseStep(500),
                      EndStep(),
                      WhenPlayStep(),
-                       AllLEDStep(255,0,255),
+                       LEDStep(255,0,255),
                        PauseStep(500),
-                       AllLEDStep(0,0,0),
+                       LEDStep(0,0,0),
                        PauseStep(500),
-                       AllLEDStep(0,255,0),
+                       LEDStep(0,255,0),
                        PauseStep(500),
                        RepeatForeverStep(),
-                         AllLEDStep(8,8,8),
+                         LEDStep(8,8,8),
                          PauseStep(500),
-                         AllLEDStep(0,0,0),
+                         LEDStep(0,0,0),
                          PauseStep(500),
                        EndStep(),
                      EndStep(),
                      WhenIMUUpright(),
-                       AllLEDStep(0,255,0),
+                       LEDStep(0,255,0),
                      EndStep(),
                      ]
 
@@ -344,7 +344,7 @@ __app_export__ = SequencerApp
 class InsertStepUI:
   def __init__(self, app):
     self.app = app
-    self.ui_delegate = Menu(self.app, ["All LEDs", "Pause", "Count loops", "When button pushed"], select_handler=self._handle_menu_select, back_handler=self._handle_menu_back)
+    self.ui_delegate = Menu(self.app, ["Set LEDs", "Pause", "Count loops", "When button pushed"], select_handler=self._handle_menu_select, back_handler=self._handle_menu_back)
 
   def update(self, delta):
     self.ui_delegate.update(delta)
@@ -362,8 +362,8 @@ class InsertStepUI:
     # clean up our downstream delegate
     self.ui_delegate._cleanup()
 
-    if item == "All LEDs":
-      self.ui_delegate = InsertAllLEDStepUI(self.app)
+    if item == "Set LEDs":
+      self.ui_delegate = InsertLEDStepUI(self.app)
     elif item == "Pause":
       self.ui_delegate = InsertPauseStepUI(self.app)
     elif item == "Count loops":
@@ -468,7 +468,7 @@ class InsertPauseStepUI:
     self.app._mode = EDIT_MODE
 
 
-class InsertAllLEDStepUI:
+class InsertLEDStepUI:
   def __init__(self, app):
     self.app = app
     self.chosen_colour = 0
@@ -511,7 +511,7 @@ class InsertAllLEDStepUI:
       r = self.rgb[0]
       g = self.rgb[1]
       b = self.rgb[2]
-      self.app.sequence.insert(self.app.sequence_pos, AllLEDStep(r, g, b))
+      self.app.sequence.insert(self.app.sequence_pos, LEDStep(r, g, b))
       self.app.sequence_pos += 1
 
       assert self.app.sequence_pos >= 0
@@ -521,7 +521,7 @@ class InsertAllLEDStepUI:
       self.app._mode = EDIT_MODE
       self.app.ui_delegate = None
     else:
-      print("unhandled button event in InsertAllLEDStepUI - ignoring")
+      print("unhandled button event in InsertLEDStepUI - ignoring")
 
 
 class Step:
@@ -555,7 +555,7 @@ class Step:
 class BlockStep(Step): ...
 
 
-class AllLEDStep(Step):
+class LEDStep(Step):
   def __init__(self, r, g, b):
     self.rgb = (r, g, b)
 
@@ -567,7 +567,7 @@ class AllLEDStep(Step):
     tildagonos.leds.write()
 
   def render(self, mode, ctx, render_step, y, text_colour):
-    text = f"{render_step}: All LEDs "
+    text = f"{render_step}: LEDs "
     tw = ctx.text_width(text)
     tw2 = ctx.text_width("this")
     w = tw + tw2
