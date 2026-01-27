@@ -40,7 +40,7 @@ class SequencerApp(App):
                        LEDStep(0,255,0),
                        PauseStep(500),
                        RepeatForeverStep(),
-                         LEDStep(8,8,8),
+                         LEDStep(255,0,0),
                          PauseStep(500),
                          LEDStep(0,0,0),
                          PauseStep(500),
@@ -610,8 +610,9 @@ class LEDStep(Step):
     tw = ctx.text_width(text)
     tw2 = ctx.text_width("this")
     w = tw + tw2
+    this_colour = (self.rgb[0] / 256, self.rgb[1] / 256, self.rgb[2] / 256)
     ctx.move_to(int(-w/2), y).rgb(*text_colour).text(text)
-    ctx.move_to(int(-w/2 + tw), y).rgb(*self.rgb).text("this")
+    ctx.move_to(int(-w/2 + tw), y).rgb(*this_colour).text("this")
 
 
 class PauseStep(Step):
