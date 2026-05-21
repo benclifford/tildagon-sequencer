@@ -12,6 +12,10 @@ import random
 import sys
 import time
 
+import platform
+if platform.python_implementation() == 'CPython':
+    from typing import Any, Optional
+
 from .pickers.colour import ColourPicker
 
 PLAY_MODE = 0
@@ -57,7 +61,10 @@ class ScripterApp(App):
     # a poll for step
     self._last_step_time_ms = 0
 
-    self.ui_delegate = None
+    # TODO: not an Any, it's a "ui delegate", however that
+    # should be typed (what calls am I making on it? it's like
+    # Menu, for example, or my various similar classes)
+    self.ui_delegate: Optional[Any] = None
 
     self._maximised()
     eventbus.on(RequestForegroundPushEvent, self._handle_foreground_push, self)
@@ -342,6 +349,10 @@ __app_export__ = ScripterApp
 class InsertStepUI:
   def __init__(self, app):
     self.app = app
+
+    # TODO: types of UI delegate
+    self.ui_delegate: Any
+
     self.ui_delegate = Menu(self.app, ["Set LEDs", "Pause", "Count loops", "When button pushed"], select_handler=self._handle_menu_select, back_handler=self._handle_menu_back)
 
   def update(self, delta):
@@ -370,7 +381,6 @@ class InsertStepUI:
       self.ui_delegate = InsertWhenButtonPushedUI(self.app)
     else:
       assert False, "No UI to create this step type"
-
 
   def _handle_menu_back(self):
     # clean up our downstream delegate
