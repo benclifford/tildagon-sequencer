@@ -511,6 +511,12 @@ class InsertLEDStepUI:
 
 
 class Step:
+  def __init__(self):
+    # Where the step lives inside the program, for referencing.
+    # I'd prefer a more object graph style program structure,
+    # which would get rid of this field.
+    self._step_number: int
+
   def enter_step(self):
     pass
 
