@@ -33,12 +33,6 @@ class ScripterApp(App):
                      EndStep(),
 
                      WhenPlayStep(),
-                       LEDStep(255,0,255),
-                       PauseStep(500),
-                       LEDStep(0,0,0),
-                       PauseStep(500),
-                       LEDStep(0,255,0),
-                       PauseStep(500),
                        RepeatForeverStep(),
                          LEDStep(255,0,0),
                          PauseStep(500),
