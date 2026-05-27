@@ -52,7 +52,13 @@ class ScripterApp(App):
                      EndStep(),
                      ]
 
-    self.sequence_pos = -1  # don't run anything
+    # sequence_pos can be positive or negative.
+    # when it is negative, it represents something about the code being
+    # displayed at a position while also not executing at that position
+    # but I'm unsure of how that meaning has turned out... it might be
+    # an out-dated idea now? (for example, there's no negative 0
+    # representable)
+    self.sequence_pos = 0  # don't run anything
 
     self._mode = EDIT_MODE
     self._reset_steps()
