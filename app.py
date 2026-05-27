@@ -586,13 +586,13 @@ class LEDStep(Step):
     tildagonos.leds.write()
 
   def render(self, mode, ctx, render_step, y, text_colour):
-    text = f"{render_step}: LEDs "
+    text = f"{render_step}: Set LEDs to "
     tw = ctx.text_width(text)
-    tw2 = ctx.text_width("this")
+    tw2 = ctx.text_width("this colour")
     w = tw + tw2
     this_colour = (self.rgb[0] / 256, self.rgb[1] / 256, self.rgb[2] / 256)
     ctx.move_to(int(-w/2), y).rgb(*text_colour).text(text)
-    ctx.move_to(int(-w/2 + tw), y).rgb(*this_colour).text("this")
+    ctx.move_to(int(-w/2 + tw), y).rgb(*this_colour).text("this colour")
 
 
 class PauseStep(Step):
