@@ -569,6 +569,10 @@ class BlockStep(Step):
         """What to do when the corresponding EndStep is reached."""
         ...
 
+    def get_end_name(self) -> str:
+        """Return the name used in end blocks"""
+        return "block"
+
 class LEDStep(Step):
   def __init__(self, r, g, b):
     self.rgb = (r, g, b)
@@ -641,7 +645,8 @@ class CountLoopsStep(Step):
 
 class WhenStep(BlockStep):
     """Marker type for When steps."""
-    pass
+    def get_end_name(self):
+        return "when"
 
 class WhenButtonPushedStep(WhenStep):
 
@@ -768,7 +773,7 @@ class EndStep(Step):
     return self._start_step.progress_end_step()
 
   def render(self, mode, ctx, render_step, y, text_colour):
-    text = "End block"
+    text = "End " + self._start_step.get_end_name()
     tw = ctx.text_width(text)
 
     # TODO: This line doesn't work nicely when the end block is for an
