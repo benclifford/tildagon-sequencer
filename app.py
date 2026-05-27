@@ -620,7 +620,9 @@ class PauseStep(Step):
     else:
       duration = self.ms
 
-    text = f"{render_step}: Pause {duration}ms"
+    duration_s = str(int(duration / 100) / 10)
+
+    text = f"{render_step}: Pause {duration_s}s"
     tw = ctx.text_width(text)
     ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
 
