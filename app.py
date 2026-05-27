@@ -54,7 +54,7 @@ class ScripterApp(App):
 
     self.sequence_pos = -1  # don't run anything
 
-    self._mode = PLAY_MODE
+    self._mode = EDIT_MODE
     self._reset_steps()
 
     # so that two different polling loops can run
