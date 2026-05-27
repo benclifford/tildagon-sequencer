@@ -108,6 +108,8 @@ class ScripterApp(App):
       self._maximised()
     else:
       print("Foreground push for other app - ignoring")
+      # TODO: we could actually trigger a when block on this?
+      # "do something when a different app/some specific other app comes to foreground"
 
   def _maximised(self):
     eventbus.on(ButtonDownEvent, self._handle_buttondown, self)
