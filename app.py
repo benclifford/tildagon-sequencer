@@ -637,7 +637,11 @@ class CountLoopsStep(Step):
   def reset(self):
     self.count = 0
 
-class WhenButtonPushedStep(BlockStep):
+class WhenStep(BlockStep):
+    """Marker type for When steps."""
+    pass
+
+class WhenButtonPushedStep(WhenStep):
 
   def __init__(self, app):
     self.app = app
@@ -677,7 +681,7 @@ class WhenButtonPushedStep(BlockStep):
     return False
 
 
-class WhenIMUUpright(BlockStep):
+class WhenIMUUpright(WhenStep):
   def __init__(self):
     # when upright, IMU says (approx) (9, 0, 0)
     self.last_state = 0  # 0 = unknown
@@ -720,7 +724,7 @@ class WhenIMUUpright(BlockStep):
     ctx.stroke()
 
 
-class WhenPlayStep(BlockStep):
+class WhenPlayStep(WhenStep):
 
   def __init__(self):
     self._start = False
@@ -768,11 +772,18 @@ class EndStep(Step):
     # TODO: This line doesn't work nicely when the end block is for an
     # inner block, not an outer-when. What should happen here is part of
     # the bigger question about how to represent nested blocks.
-    ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
-    ctx.rgb(255,0,0).begin_path()
-    ctx.move_to(-240, y + LIVE_SIZE/2)
-    ctx.line_to(240, y + LIVE_SIZE/2)
-    ctx.stroke()
+    if isinstance(self._start_step, WhenStep):
+        ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
+        ctx.rgb(255,0,0).begin_path()
+        ctx.move_to(-240, y + LIVE_SIZE/2)
+        ctx.line_to(240, y + LIVE_SIZE/2)
+        ctx.stroke()
+    else:
+        ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
+        ctx.rgb(64,64,255).begin_path()
+        ctx.move_to(-tw/2-10, y + LIVE_SIZE/2)
+        ctx.line_to(tw/2+10, y + LIVE_SIZE/2)
+        ctx.stroke()
 
 class RepeatForeverStep(BlockStep):
   def progress_end_step(self):
