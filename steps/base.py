@@ -1,3 +1,6 @@
+from ..const import LIVE_SIZE
+
+
 class Step:
   def __init__(self):
     # Where the step lives inside the program, for referencing.
@@ -40,4 +43,45 @@ class BlockStep(Step):
     def get_end_name(self) -> str:
         """Return the name used in end blocks"""
         return "block"
+
+
+class EndStep(Step):
+  def __init__(self):
+    self._start_step = None
+    # this should be set dynamically at start of execution to the
+    # executor-detected start step.
+
+  def progress_step(self):
+    assert isinstance(self._start_step, BlockStep), f"start step should be a BlockStep: {self._start_step}"
+    return self._start_step.progress_end_step()
+
+  def render(self, mode, ctx, render_step, y, text_colour):
+    if self._start_step:
+        text = "End " + self._start_step.get_end_name()
+    else:
+        text = "End ... of something?"
+        print("consistency error: end step with missing start step")
+    tw = ctx.text_width(text)
+
+    # TODO: This line doesn't work nicely when the end block is for an
+    # inner block, not an outer-when. What should happen here is part of
+    # the bigger question about how to represent nested blocks.
+    if isinstance(self._start_step, WhenStep):
+        ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
+        ctx.rgb(255,0,0).begin_path()
+        ctx.move_to(-240, y + LIVE_SIZE/2)
+        ctx.line_to(240, y + LIVE_SIZE/2)
+        ctx.stroke()
+    else:
+        ctx.move_to(int(-tw/2), y).rgb(*text_colour).text(text)
+        ctx.rgb(64,64,255).begin_path()
+        ctx.move_to(-tw/2-10, y + LIVE_SIZE/2)
+        ctx.line_to(tw/2+10, y + LIVE_SIZE/2)
+        ctx.stroke()
+
+
+class WhenStep(BlockStep):
+    """Marker type for When steps."""
+    def get_end_name(self):
+        return "when"
 
