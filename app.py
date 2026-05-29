@@ -13,7 +13,7 @@ import time
 
 from .steps.base import BlockStep, Step, EndStep, WhenStep
 from .steps.button import WhenButtonPushedStep
-from .steps.count import CountLoopsStep
+from .steps.count import CountLoopsStep, InsertCountLoopsUI
 from .steps.forever import RepeatForeverStep
 from .steps.imu import WhenIMUUpright
 from .steps.led import LEDStep, InsertLEDStepUI
@@ -410,26 +410,6 @@ class InsertWhenButtonPushedUI:
 
   def update(self, delta):
     self.app.sequence.insert(self.app.sequence_pos, WhenButtonPushedStep(self.app))
-    self.app.sequence_pos += 1
-
-    assert self.app.sequence_pos >= 0
-    assert self.app.sequence_pos < len(self.app.sequence)
-
-    # and remove ourselves from the app
-    self.app.ui_delegate = None
-    self.app._mode = EDIT_MODE
-
-
-  def draw(self, ctx):
-    pass
-
-
-class InsertCountLoopsUI:
-  def __init__(self, app):
-    self.app = app
-
-  def update(self, delta):
-    self.app.sequence.insert(self.app.sequence_pos, CountLoopsStep())
     self.app.sequence_pos += 1
 
     assert self.app.sequence_pos >= 0

@@ -1,4 +1,5 @@
 from .base import Step
+from ..const import EDIT_MODE
 
 class CountLoopsStep(Step):
   def __init__(self):
@@ -14,3 +15,23 @@ class CountLoopsStep(Step):
 
   def reset(self):
     self.count = 0
+
+
+class InsertCountLoopsUI:
+  def __init__(self, app):
+    self.app = app
+
+  def update(self, delta):
+    self.app.sequence.insert(self.app.sequence_pos, CountLoopsStep())
+    self.app.sequence_pos += 1
+
+    assert self.app.sequence_pos >= 0
+    assert self.app.sequence_pos < len(self.app.sequence)
+
+    # and remove ourselves from the app
+    self.app.ui_delegate = None
+    self.app._mode = EDIT_MODE
+
+
+  def draw(self, ctx):
+    pass
