@@ -23,7 +23,7 @@ from .steps.whenplay import WhenPlayStep
 from .const import LIVE_SIZE, PLAY_MODE, EDIT_MODE, MENU_MODE, INSERT_STEP_MODE
 
 import platform
-if platform.python_implementation() == 'CPython':
+if hasattr(platform, "python_implementation") and platform.python_implementation() == 'CPython':
     from typing import Any, Optional
 
 from .pickers.colour import ColourPicker
