@@ -81,7 +81,20 @@ class EndStep(Step):
 
 
 class WhenStep(BlockStep):
-    """Marker type for When steps."""
+
+    def __init__(self):
+        self.interrupt_stack: list[int] = []
+
+    """Top-level When steps."""
     def get_end_name(self):
         return "when"
 
+    def enter_when(self, prev_pos):
+        """Stack up the previous pos for returning to when this block is over."""
+        self.interrupt_stack.append(prev_pos)
+
+    def progress_end_step(self):
+        if len(self.interrupt_stack) > 0:
+            return self.interrupt_stack.pop()
+        else:
+            return False

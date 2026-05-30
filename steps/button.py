@@ -9,8 +9,9 @@ from ..const import LIVE_SIZE, PLAY_MODE, EDIT_MODE
 class WhenButtonPushedStep(WhenStep):
 
   def __init__(self, app):
-    self.app = app
+    super().__init__()
 
+    self.app = app
     self.pressed = False
     eventbus.on(ButtonDownEvent, self._handle_buttondown, self.app)
 
@@ -41,9 +42,6 @@ class WhenButtonPushedStep(WhenStep):
     ctx.move_to(-240, y - LIVE_SIZE/2)
     ctx.line_to(240, y - LIVE_SIZE/2)
     ctx.stroke()
-
-  def progress_end_step(self):
-    return False
 
 
 class InsertWhenButtonPushedUI:

@@ -62,7 +62,7 @@ class ScripterApp(App):
     # but I'm unsure of how that meaning has turned out... it might be
     # an out-dated idea now? (for example, there's no negative 0
     # representable)
-    self.sequence_pos = 0  # don't run anything
+    self.sequence_pos = 0
 
     self._mode = EDIT_MODE
     self._reset_steps()
@@ -181,20 +181,29 @@ class ScripterApp(App):
         self.sequence[self.sequence_pos].enter_step()
 
     for sn in range(0, len(self.sequence)):
-      if self.sequence[sn].poll_for_when():
+      polling_step = self.sequence[sn]
+      if polling_step.poll_for_when():
         # guard for the when being the last statement, so there
-        # is no sn+1
+        # is no sn+1. In a well-formed program, there will always be a
+        # next block, so then this could become an assert not a if/skip.
         if sn+1 < len(self.sequence):
-          # TODO: stack-style management to be able to return
-          # to main program. maybe fits in with a more nested
-          # data structure then a list of steps? to go along
-          # with ifs and repeats?
+          # Tell the when-block where we were before, so that we can
+          # go back there later.
+          # TODO: what are the semantics on leaving this step if its a
+          # pause step? Right now, I think we just stay entered, which is
+          # probably ok (e.g. counters will continue to count down, possibly
+          # running over). That's maybe not so good for e.g. if we were
+          # driving a buzzer?
+          assert isinstance(polling_step, WhenStep)
+          polling_step.enter_when(self.sequence_pos)
+
           self.sequence_pos = sn+1
           self.sequence[self.sequence_pos].enter_step()
-          # so now we have multiple steps that we have entered
 
           # break to avoid handling any other when blocks in
-          # the same iteration
+          # the same iteration - but actually who cares? all the triggered
+          # when-blocks need to happen? this loop will accumulate them all
+          # on the stack if several fire.
           break
         else:
           # ignore this when block as it does nothing.

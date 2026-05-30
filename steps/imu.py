@@ -6,6 +6,7 @@ from ..const import LIVE_SIZE
 
 class WhenIMUUpright(WhenStep):
   def __init__(self):
+    super().__init__()
     # when upright, IMU says (approx) (9, 0, 0)
     self.last_state = 0  # 0 = unknown
     self.last_imu_x = 0.0
@@ -32,9 +33,6 @@ class WhenIMUUpright(WhenStep):
     return r
 
   def progress_step(self):
-    return False
-
-  def progress_end_step(self):
     return False
 
   def render(self, mode, ctx, render_step, y, text_colour):

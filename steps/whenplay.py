@@ -4,6 +4,7 @@ from ..const import LIVE_SIZE
 class WhenPlayStep(WhenStep):
 
   def __init__(self):
+    super().__init__()
     self._start = False
 
   def poll_for_when(self):
@@ -27,7 +28,3 @@ class WhenPlayStep(WhenStep):
 
   def reset(self):
     self._start = True
-
-  def progress_end_step(self):
-    # block here.
-    return False
