@@ -36,6 +36,10 @@ class Step:
 
 # kind of step that pairs with an EndStep to scope out a block of steps
 class BlockStep(Step):
+    def __init__(self):
+        super().__init__()
+        self._end_step: int
+
     def progress_end_step(self):
         """What to do when the corresponding EndStep is reached."""
         ...

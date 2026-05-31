@@ -102,6 +102,7 @@ class ScripterApp(App):
       if isinstance(step, EndStep):
         print(f"Popping from block stack for step {n}, {step}")
         step._start_step = end_stack.pop()
+        step._start_step._end_step = n
         print(f"Stack: {end_stack}")
 
       n += 1
@@ -358,11 +359,35 @@ class ScripterApp(App):
       # the head step of a block, which will also delete all
       # of the contents of that block.
 
-      if isinstance(self.sequence[self.sequence_pos], EndStep):
+      assert self.sequence_pos >= 0
+      assert self.sequence_pos < len(self.sequence)
+      step = self.sequence[self.sequence_pos]
+
+      if isinstance(step, EndStep):
           # TODO: show a guiding message rather than
           # silently ignoring.
           pass
-     
+      elif isinstance(step, BlockStep):
+          # delete entire block.
+          # self._reset_steps() will ensure that we're well-formed
+          # and also ensure that the step is correctly cross linked to its end step so that we know which range to delete.
+          self._reset_steps()
+
+          # TODO: whatever happens for empty list handling
+          # below also needs to happen here.         
+
+          end_step_pos = step._end_step
+          end_step_obj = self.sequence[end_step_pos]
+          assert isinstance(end_step_obj, EndStep)
+           
+          assert end_step_obj._start_step == self.sequence[self.sequence_pos]
+
+          del self.sequence[self.sequence_pos:end_step_pos+1] 
+
+          # postconditions on well-formedness 
+          self._reset_steps()
+          assert self.sequence_pos >= 0
+          assert self.sequence_pos < len(self.sequence)
       else: 
 
           self._reset_steps()
