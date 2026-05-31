@@ -429,6 +429,8 @@ class InsertStepUI:
     # TODO: types of UI delegate
     self.ui_delegate: Any
 
+    # TODO: generate this list from step class registrations
+    # somehow - rather than hard-coding here.
     self.ui_delegate = Menu(self.app, ["Set LEDs", "Pause", "Count loops", "When button pushed"], select_handler=self._handle_menu_select, back_handler=self._handle_menu_back)
 
   def update(self, delta):
