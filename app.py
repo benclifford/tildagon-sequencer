@@ -352,11 +352,10 @@ class ScripterApp(App):
       # that as the assertion checker. (don't need to be calling each
       # step's reset method each time, but I think that's not expensive)
       self._reset_steps()
-
-      # delete current step then switch back to edit mode
       assert self.sequence_pos >= 0
       assert self.sequence_pos < len(self.sequence)
 
+      # delete current step then switch back to edit mode
       del self.sequence[self.sequence_pos]
 
       # BUG: this is going to break when deleting all steps so that
