@@ -351,24 +351,38 @@ class ScripterApp(App):
       # self._reset_steps() will raise an assertion if not, so use
       # that as the assertion checker. (don't need to be calling each
       # step's reset method each time, but I think that's not expensive)
-      self._reset_steps()
-      assert self.sequence_pos >= 0
-      assert self.sequence_pos < len(self.sequence)
 
-      # delete current step then switch back to edit mode
-      del self.sequence[self.sequence_pos]
+      # if the current step is an EndStep, don't let it be
+      # deleted: this is a consistency violation. My intention
+      # is that an end step gets deleted as part of deleting
+      # the head step of a block, which will also delete all
+      # of the contents of that block.
 
-      # BUG: this is going to break when deleting all steps so that
-      # the sequence list is empty. Probably other bits of the
-      # app will break too, and maybe it should be the case that there
-      # is always one step?
-      if self.sequence_pos >= len(self.sequence):
-          self.sequence_pos = len(self.sequence) - 1
+      if isinstance(self.sequence[self.sequence_pos], EndStep):
+          # TODO: show a guiding message rather than
+          # silently ignoring.
+          pass
+     
+      else: 
 
-      assert self.sequence_pos >= 0
-      assert self.sequence_pos < len(self.sequence)
-      # postcondition: still well-formed, nestingwise
-      self._reset_steps()
+          self._reset_steps()
+          assert self.sequence_pos >= 0
+          assert self.sequence_pos < len(self.sequence)
+
+          # delete current step then switch back to edit mode
+          del self.sequence[self.sequence_pos]
+
+          # BUG: this is going to break when deleting all steps so that
+          # the sequence list is empty. Probably other bits of the
+          # app will break too, and maybe it should be the case that there
+          # is always one step?
+          if self.sequence_pos >= len(self.sequence):
+              self.sequence_pos = len(self.sequence) - 1
+
+          assert self.sequence_pos >= 0
+          assert self.sequence_pos < len(self.sequence)
+          # postcondition: still well-formed, nestingwise
+          self._reset_steps()
 
       self.ui_delegate._cleanup()
       self.ui_delegate = None
