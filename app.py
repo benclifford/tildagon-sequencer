@@ -440,6 +440,10 @@ class InsertStepUI:
     self.ui_delegate.draw(ctx)
 
   def _handle_menu_select(self, item, idx):
+
+    # precondition that the program is valid
+    self.app._reset_steps()
+
     # I think there might be problems here with this
     # being called inside an event handler?
     # but it seems to be working right now. expect

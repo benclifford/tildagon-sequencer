@@ -1,9 +1,8 @@
 from events.input import BUTTON_TYPES, ButtonDownEvent
 from system.eventbus import eventbus
 
-from .base import WhenStep
+from .base import EndStep, WhenStep
 from ..const import LIVE_SIZE, PLAY_MODE, EDIT_MODE
-
 
 
 class WhenButtonPushedStep(WhenStep):
@@ -49,16 +48,26 @@ class InsertWhenButtonPushedUI:
     self.app = app
 
   def update(self, delta):
-    self.app.sequence.insert(self.app.sequence_pos, WhenButtonPushedStep(self.app))
-    self.app.sequence_pos += 1
+    """This is a WhenStep so the insert should happen at the end of the program, as a new top level block."""
+    self.app.sequence.append(WhenButtonPushedStep(self.app))
+    self.app.sequence.append(EndStep())
+
+    # move cursor to end step so that a subsequent InsertStep will populate the new when block
+    self.app.sequence_pos = len(self.app.sequence) - 1
 
     assert self.app.sequence_pos >= 0
     assert self.app.sequence_pos < len(self.app.sequence)
 
+    # this will make the end step be populated properly
+    # which won't happen otherwise.
+    # TODO: maybe steps (aka step authors) shouldn't be
+    # responsible for this and I can make it happen when
+    # going back to one of the framework modes?
+    self.app._reset_steps()
+
     # and remove ourselves from the app
     self.app.ui_delegate = None
     self.app._mode = EDIT_MODE
-
 
   def draw(self, ctx):
     pass
