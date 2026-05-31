@@ -133,7 +133,7 @@ class ScripterApp(App):
     elif self._mode == MENU_MODE:
       # print("main menu update")
       if self.ui_delegate is None:
-          self.ui_delegate = Menu(self, ["Insert step above", "Delete step", "Play", "Play in background"], select_handler=self._handle_menu_select, back_handler=self._handle_menu_back)
+          self.ui_delegate = Menu(self, ["Insert step", "Delete step", "Play", "Play in background"], select_handler=self._handle_menu_select, back_handler=self._handle_menu_back)
           # TODO: Edit step
           # TODO: Play in background
           # TODO: Choose difficulty
@@ -412,7 +412,7 @@ class ScripterApp(App):
       self.ui_delegate._cleanup()
       self.ui_delegate = None
       self._mode = EDIT_MODE
-    elif item == "Insert step above":
+    elif item == "Insert step":
       self.ui_delegate._cleanup()
       self.ui_delegate = None
       self._mode = INSERT_STEP_MODE
