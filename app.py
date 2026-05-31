@@ -14,7 +14,7 @@ import time
 from .steps.base import BlockStep, Step, EndStep, WhenStep
 from .steps.button import WhenButtonPushedStep, InsertWhenButtonPushedUI
 from .steps.count import CountLoopsStep, InsertCountLoopsUI
-from .steps.forever import RepeatForeverStep
+from .steps.forever import RepeatForeverStep, InsertRepeatForeverStepUI
 from .steps.imu import WhenIMUUpright
 from .steps.led import LEDStep, InsertLEDStepUI
 from .steps.pause import PauseStep, InsertPauseStepUI
@@ -93,6 +93,8 @@ class ScripterApp(App):
 
       if isinstance(step, WhenStep):
         assert end_stack == [], f"When-steps can only occur at the top level: {end_stack}"
+      else:
+        assert end_stack != [], f"Top level steps but be When-steps: {end_stack}"
  
       if isinstance(step, BlockStep):
         print(f"Appending to block stack for step {n}, {step}")
@@ -431,7 +433,7 @@ class InsertStepUI:
 
     # TODO: generate this list from step class registrations
     # somehow - rather than hard-coding here.
-    self.ui_delegate = Menu(self.app, ["Set LEDs", "Pause", "Count loops", "When button pushed"], select_handler=self._handle_menu_select, back_handler=self._handle_menu_back)
+    self.ui_delegate = Menu(self.app, ["Set LEDs", "Pause", "Count loops", "When button pushed", "Repeat forever"], select_handler=self._handle_menu_select, back_handler=self._handle_menu_back)
 
   def update(self, delta):
     self.ui_delegate.update(delta)
@@ -461,6 +463,8 @@ class InsertStepUI:
       self.ui_delegate = InsertCountLoopsUI(self.app)
     elif item == "When button pushed":
       self.ui_delegate = InsertWhenButtonPushedUI(self.app)
+    elif item == "Repeat forever":
+      self.ui_delegate = InsertRepeatForeverStepUI(self.app)
     else:
       assert False, "No UI to create this step type"
 
